@@ -1,0 +1,15 @@
+version = 1
+disable_existing_loggers = false
+
+[root]
+level = "INFO"
+handlers = ["rootHandler", ]
+
+[handlers.rootHandler]
+class = "logging.StreamHandler"
+level = "INFO"
+formatter = "rootFormatter"
+stream = "ext://sys.stdout"
+
+[formatters.rootFormatter]
+format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
