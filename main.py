@@ -2,6 +2,7 @@ import argparse
 import logging
 import toml
 from logging import config
+from pandas_vs_polars.bm_group_by import pandas_group_by, polars_group_by
 from pandas_vs_polars.sample_data_generator import generate_data_wrapper
 from pathlib import Path
 
@@ -33,6 +34,17 @@ def main() -> None:
     args = parser.parse_args()
     _logger.info(args)
     paths = generate_data_wrapper(args.n, args.overwrite)
+
+    _logger.info("Doing benchmarking on group by")
+    for path in paths:
+        pandas_group_by(path)
+        polars_group_by(path)
+
+    if args.clean:
+        _logger.info("Cleaning up sample files")
+        for path in paths:
+            _logger.info(f"Deleting file {path}")
+            path.unlink()
 
 
 if __name__ == "__main__":
