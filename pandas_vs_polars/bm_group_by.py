@@ -15,6 +15,7 @@ import time
 import tracemalloc
 from pandas_vs_polars.utils import time_it
 from pathlib import Path
+from typing import TypedDict
 
 
 _logger = logging.getLogger(__name__)
@@ -23,15 +24,22 @@ columns = (
     ['sex'],
     ['post_code'],
     ['city'],
-    ['city', 'post_code'],
     ['job'],
+    ['city', 'post_code'],
     # ['year_dob'],
 )
 # TODO: city and post_code are way too unique, add year for date of birth
 
 
+class Measure(TypedDict):
+    memory_current: int
+    memory_peak: int
+    execution_time: int
+
+
 @time_it
-def pandas_group_by(file_path: Path):
+def pandas_group_by(file_path: Path) -> dict[str, Measure]:
+    benchmark_result = dict()
     tracemalloc.start()
     _logger.info(f"[pandas] running group by on file {file_path.name}")
     df = pd.read_csv(file_path, sep="\t")
@@ -46,11 +54,16 @@ def pandas_group_by(file_path: Path):
         mem_curr, mem_peak = tracemalloc.get_traced_memory()
         _logger.info(f"[pandas] memory usage current: {mem_curr:,}, peak: {mem_peak:,}")
         _logger.info(f"[pandas] group by took {toc:,} ns, shape {result.shape}")
+        benchmark_result[', '.join(col)] = {
+            "memory_current": mem_curr, "memory_peak": mem_peak, "execution_time": toc
+        }
     tracemalloc.stop()
+    return benchmark_result
 
 
 @time_it
-def polars_group_by(file_path: Path) -> None:
+def polars_group_by(file_path: Path) -> dict[str, Measure]:
+    benchmark_result = dict()
     tracemalloc.start()
     _logger.info(f"[polars] running group by on file {file_path.name}")
     for col in columns:
@@ -61,4 +74,8 @@ def polars_group_by(file_path: Path) -> None:
         mem_curr, mem_peak = tracemalloc.get_traced_memory()
         _logger.info(f"[polars] memory usage current: {mem_curr:,}, peak: {mem_peak:,}")
         _logger.info(f"[polars] group by took {toc:,} ns, shape {result.shape}")
+        benchmark_result[', '.join(col)] = {
+            "memory_current": mem_curr, "memory_peak": mem_peak, "execution_time": toc
+        }
     tracemalloc.stop()
+    return benchmark_result

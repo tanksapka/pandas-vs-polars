@@ -1,5 +1,8 @@
 import argparse
+import json
 import logging
+from collections import defaultdict
+
 import toml
 from logging import config
 from pandas_vs_polars.bm_group_by import pandas_group_by, polars_group_by
@@ -36,9 +39,12 @@ def main() -> None:
     paths = generate_data_wrapper(args.n, args.overwrite)
 
     _logger.info("Doing benchmarking on group by")
+    results = defaultdict(dict)
     for path in paths:
-        pandas_group_by(path)
-        polars_group_by(path)
+        results[path.name]["pandas"] = pandas_group_by(path)
+        results[path.name]["polars"] = polars_group_by(path)
+    with Path("results.json").open("w") as fh:
+        json.dump(results, fh, indent=2)
 
     if args.clean:
         _logger.info("Cleaning up sample files")
