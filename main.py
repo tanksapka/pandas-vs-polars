@@ -1,11 +1,12 @@
 import argparse
 import json
 import logging
-from collections import defaultdict
-
 import toml
+from collections import defaultdict
 from logging import config
+from pandas_vs_polars import Constants
 from pandas_vs_polars.bm_group_by import pandas_group_by, polars_group_by
+from pandas_vs_polars.chart_generator import parse_input, create_chart
 from pandas_vs_polars.sample_data_generator import generate_data_wrapper
 from pathlib import Path
 
@@ -43,8 +44,13 @@ def main() -> None:
     for path in paths:
         results[path.name]["pandas"] = pandas_group_by(path)
         results[path.name]["polars"] = polars_group_by(path)
-    with Path("results.json").open("w") as fh:
+
+    Constants.measurement_output_directory.value.mkdir(parents=True, exist_ok=True)
+    result_file = Constants.measurement_output_directory.value.joinpath("results.json")
+    with result_file.open("w") as fh:
         json.dump(results, fh, indent=2)
+
+    create_chart(parse_input(result_file), 'execution_time', 'million nanoseconds', 1000000)
 
     if args.clean:
         _logger.info("Cleaning up sample files")

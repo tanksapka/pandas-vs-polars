@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 sample_data
+result_data
 
 .idea

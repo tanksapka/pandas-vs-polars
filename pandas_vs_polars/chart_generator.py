@@ -3,18 +3,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
-from enum import Enum
+from pandas_vs_polars import Constants
 from pathlib import Path
 from typing import Optional
 
 
-class Constants(Enum):
-    bar_width = 0.25
-    ax2_offset = -0.25
-    bottom_adjust = 0.30
-
-
 def parse_input(input_file: Path) -> pd.DataFrame:
+    # TODO: make it work with direct data input as well
     with input_file.open() as fh:
         data = json.load(fh)
 
@@ -30,9 +25,12 @@ def parse_input(input_file: Path) -> pd.DataFrame:
     return df
 
 
-def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric_magnitude: Optional[int] = 1):
-    # TODO: Add chart title as well
-    # TODO: Return saved image file's path
+def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric_magnitude: Optional[int] = 1,
+                 chart_title: Optional[str] = None) -> Path:
+    if chart_title is None:
+        chart_title = metric_column.capitalize().replace("_", " ")
+    plt.title(chart_title)
+
     fig, ax = plt.subplots()
 
     x_ticks, x_tick_labels = list(), list()
@@ -68,11 +66,6 @@ def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric
     ax2.grid(axis='x')
     fig.subplots_adjust(bottom=Constants.bottom_adjust.value)  # TODO: make distance dynamic based on sample size
 
-    plt.savefig('tst.png')
-    # plt.show()
-
-
-if __name__ == '__main__':
-    p = Path(__file__).resolve().parent.parent.joinpath('results.json')
-    d = parse_input(p)
-    create_chart(d, 'execution_time', 'million nanoseconds', 1000000)
+    output_file = Constants.measurement_output_directory.value.joinpath(f'metric_column.png')
+    plt.savefig(output_file)
+    return output_file

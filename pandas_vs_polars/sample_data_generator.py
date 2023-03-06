@@ -25,8 +25,8 @@ def generate_data(n: int, overwrite: bool) -> Path:
     header = '\t'.join(fields)
     row_template = "\t".join(f"{{{field}}}" for field in fields)
 
-    Constants.output_directory.value.mkdir(exist_ok=True)
-    output_file = Constants.output_directory.value.joinpath(f'sample_{n}.csv')
+    Constants.sample_output_directory.value.mkdir(exist_ok=True)
+    output_file = Constants.sample_output_directory.value.joinpath(f'sample_{n}.csv')
 
     if not overwrite and output_file.exists():
         _logger.info(f"Output file {output_file} already exists, overwrite {overwrite}")
