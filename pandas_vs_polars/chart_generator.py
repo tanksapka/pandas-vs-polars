@@ -8,10 +8,17 @@ from pathlib import Path
 from typing import Optional
 
 
-def parse_input(input_file: Path) -> pd.DataFrame:
-    # TODO: make it work with direct data input as well
-    with input_file.open() as fh:
-        data = json.load(fh)
+def parse_input(input_data: Optional[dict] = None, input_file: Optional[Path] = None) -> pd.DataFrame:
+    if input_data is None and input_file is None:
+        raise ValueError("Either input_data or input file has to be provided!")
+    if input_data and input_file:
+        raise ValueError("Only one argument should be provided!")
+
+    if input_data:
+        data = input_data
+    if input_file:
+        with input_file.open() as fh:
+            data = json.load(fh)
 
     tab_data = list()
     for k, v in data.items():
@@ -66,6 +73,6 @@ def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric
     ax2.grid(axis='x')
     fig.subplots_adjust(bottom=Constants.bottom_adjust.value)  # TODO: make distance dynamic based on sample size
 
-    output_file = Constants.measurement_output_directory.value.joinpath(f'metric_column.png')
+    output_file = Constants.measurement_output_directory.value.joinpath(f'{metric_column}.png')
     plt.savefig(output_file)
     return output_file

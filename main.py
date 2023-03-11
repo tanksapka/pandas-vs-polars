@@ -20,8 +20,9 @@ def main() -> None:
     Gathers user input and runs performance tests and collects statistics.
     """
     parser = argparse.ArgumentParser(
-        description="Pandas vs Polars performance tester. The program creates sample data and runs various test "
-                    "with both packages. After running collects memory usage and execution time statistics as well."
+        description="Pandas vs Polars performance tester. The program creates sample data and runs various tests "
+                    "with both packages. After running these tests collects memory usage and execution time statistics "
+                    "as well."
     )
     parser.add_argument(
         "-n", type=int, required=False, default=1000000, help="Maximum number of rows in the last batch"
@@ -47,10 +48,13 @@ def main() -> None:
 
     Constants.measurement_output_directory.value.mkdir(parents=True, exist_ok=True)
     result_file = Constants.measurement_output_directory.value.joinpath("results.json")
+    _logger.info(f"Saving results to file: {result_file}")
     with result_file.open("w") as fh:
         json.dump(results, fh, indent=2)
 
-    create_chart(parse_input(result_file), 'execution_time', 'million nanoseconds', 1000000)
+    _logger.info("Generating charts from results")
+    create_chart(parse_input(input_data=results), 'execution_time', 'million nanoseconds', 1000000)
+    create_chart(parse_input(input_data=results), 'memory_peak', 'megabytes', 1024*1024)
 
     if args.clean:
         _logger.info("Cleaning up sample files")
