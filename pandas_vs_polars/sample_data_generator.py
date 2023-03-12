@@ -16,7 +16,7 @@ def generate_data(n: int, overwrite: bool) -> Path:
     :param overwrite: overwrite existing files or not
     :return: path of the sample file
     """
-    _logger.info(f"Generating sample data of size {n}")
+    _logger.info(f"Generating sample data of size {n:,}")
     fake = Faker()
     fields = (
         'username', 'ssn', 'name', 'date_of_birth', 'sex', 'mail', 'phone_number', 'post_code', 'city',

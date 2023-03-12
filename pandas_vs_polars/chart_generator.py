@@ -36,11 +36,14 @@ def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric
                  chart_title: Optional[str] = None) -> Path:
     if chart_title is None:
         chart_title = metric_column.capitalize().replace("_", " ")
-    plt.title(chart_title)
 
     fig, ax = plt.subplots()
+    fig.set_size_inches(
+        Constants.width_increment.value * df["group_by_column"].nunique() * df["sample_size"].nunique(),
+        Constants.height.value
+    )
 
-    x_ticks, x_tick_labels = list(), list()
+    x_ticks, x_tick_labels, x_tick_len = list(), list(), 0
     for i, lib in enumerate(df["library_name"].unique()):
         tmp_df = df.loc[df["library_name"] == lib].sort_values(['group_by_column', 'sample_size'])
         ax.bar(x=np.arange(len(tmp_df.index)) + i * Constants.bar_width.value,
@@ -48,30 +51,35 @@ def create_chart(df: pd.DataFrame, metric_column: str, metric_label: str, metric
                width=Constants.bar_width.value, label=lib)
         x_ticks = np.arange(len(tmp_df.index)) + Constants.bar_width.value / 2
         x_tick_labels = tmp_df["sample_size"].apply(lambda x: f'{x / 1000000:,}m')
+        x_tick_len = max(x_tick_len, max(x_tick_labels.apply(lambda x: len(x))))
 
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(x_tick_labels)
     ax.tick_params('x', labelrotation=90.0)
     ax.set_ylabel(metric_label)
     ax.ticklabel_format(axis='y', useOffset=False, style='plain')
+    ax.set_title(chart_title)
     ax.legend()
+    ax.margins(Constants.x_margin.value, Constants.y_margin.value)
 
     ax2 = ax.twiny()
-    ax2.spines["bottom"].set_position(("axes", Constants.ax2_offset.value))  # TODO: make distance dynamic based on sample size
+    ax2_pos = Constants.ax2_offset.value * (x_tick_len + 1)
+    ax2.spines["bottom"].set_position(("axes", ax2_pos))
     ax2.tick_params('both', length=0, width=0, which='minor')
     ax2.tick_params('both', direction='in', which='major')
     ax2.xaxis.set_ticks_position("bottom")
     ax2.xaxis.set_label_position("bottom")
 
-    ax2_ticks = [0, *((df["sample_size"].nunique() * i) + 0.5 for i in range(1, df["group_by_column"].nunique() + 1))]
-    ax2_ticks[-1] = ax2_ticks[-1] + 0.5
+    ax2_ticks = [
+        0, *(100 / df["group_by_column"].nunique() * i for i in range(1, df["group_by_column"].nunique())), 100
+    ]
 
     ax2.set_xticks(ax2_ticks)
     ax2.xaxis.set_major_formatter(ticker.NullFormatter())
     ax2.xaxis.set_minor_locator(ticker.FixedLocator([i + (j - i) / 2 for i, j in zip(ax2_ticks, ax2_ticks[1:])]))
     ax2.xaxis.set_minor_formatter(ticker.FixedFormatter(df["group_by_column"].sort_values().unique()))
     ax2.grid(axis='x')
-    fig.subplots_adjust(bottom=Constants.bottom_adjust.value)  # TODO: make distance dynamic based on sample size
+    fig.subplots_adjust(bottom=abs(ax2_pos))
 
     output_file = Constants.measurement_output_directory.value.joinpath(f'{metric_column}.png')
     plt.savefig(output_file)
