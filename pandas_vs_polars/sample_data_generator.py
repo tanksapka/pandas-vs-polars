@@ -3,6 +3,7 @@ from faker import Faker
 from pandas_vs_polars import Constants
 from pandas_vs_polars.utils import generate_next_n, time_it
 from pathlib import Path
+from pip._vendor.rich.progress import track
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ def generate_data_wrapper(n: int, overwrite: bool) -> list[Path]:
     :return: list of path of the sample file
     """
     paths = list()
-    for batch in generate_next_n():
+    for batch in track(generate_next_n(), description="Generating sample data...", total=3):
         if batch > n:
             break
         paths.append(generate_data(batch, overwrite))

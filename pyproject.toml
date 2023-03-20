@@ -3,13 +3,18 @@ disable_existing_loggers = false
 
 [root]
 level = "INFO"
-handlers = ["rootHandler", ]
+handlers = ["richHandler", ]
 
 [handlers.rootHandler]
 class = "logging.StreamHandler"
 level = "INFO"
 formatter = "rootFormatter"
 stream = "ext://sys.stdout"
+
+[handlers.richHandler]
+class = "pip._vendor.rich.logging.RichHandler"
+level = "INFO"
+formatter = "rootFormatter"
 
 [formatters.rootFormatter]
 format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
